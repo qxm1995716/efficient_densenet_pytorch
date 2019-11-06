@@ -95,7 +95,7 @@ class DenseNet(nn.Module):
 
         super(DenseNet, self).__init__()
         assert 0 < compression <= 1, 'compression of densenet should be between 0 and 1'
-        self.avgpool_size = 8 if small_inputs else 7
+        # self.avgpool_size = 8 if small_inputs else 7  if use F.adpative_avg_pool2d, this line will be useless
 
         # First convolution
         if small_inputs:
@@ -151,6 +151,7 @@ class DenseNet(nn.Module):
     def forward(self, x):
         features = self.features(x)
         out = F.relu(features, inplace=True)
-        out = F.avg_pool2d(out, kernel_size=self.avgpool_size).view(features.size(0), -1)
+        out = F.adaptive_avg_pool2d(out, (1, 1))
+        out = torch.flatten(out, 1)
         out = self.classifier(out)
         return out
